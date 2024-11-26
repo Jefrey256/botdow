@@ -4,71 +4,46 @@ import { proto } from '@whiskeysockets/baileys';
 import fs from "fs"
 
 // Função para extrair dados de uma mensagem
-export const extractMessage = (messageDetails: proto.IWebMessageInfo) => {
+export const extractMessage = (messageDetails) => {
   const mentions = messageDetails.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-  const finalMessageText = messageDetails.message?.conversation || messageDetails.message?.extendedTextMessage?.text || "";
-
-  // Extraindo o número sem o sufixo '@s.whatsapp.net' (se for de grupo)
-  const fromUser = messageDetails.key?.participant?.split('@')[0] || messageDetails.key?.remoteJid?.split('@')[0] || "Desconhecido";
+  
+  const finalMessageText = messageDetails.message?.conversation || "";
+  
+  // O 'from' já existe, então apenas pegamos o número sem o sufixo '@s.whatsapp.net' (se for de grupo)
+  const fromUser = messageDetails.key?.participant?.split('@')[0] || messageDetails.key?.remoteJid?.split('@')[0];
 
   const from = messageDetails.key?.remoteJid || "Remetente desconhecido";
   const userName = messageDetails?.pushName || "Usuário Desconhecido";
-
-  const PREFIX = ","; // Prefixo do comando
-  const isCommand = finalMessageText.startsWith(PREFIX); // Verifica se a mensagem começa com o prefixo
+  const isCommand = finalMessageText.startsWith(PREFIX);
   const participant = messageDetails.key?.participant || messageDetails.key?.remoteJid;
   
-  const messageKey: proto.IMessageKey = {
-  remoteJid: messageDetails.key.remoteJid,  // ID do remetente ou grupo
-  fromMe: messageDetails.key.fromMe,        // Se a mensagem foi enviada pelo bot
-  id: messageDetails.key.id,                // ID único da mensagem
-};
+  
+  
+  
+  const commandName = isCommand ? finalMessageText.slice(PREFIX.length).split(" ")[0] : "";
+  const args = finalMessageText.split(" ").slice(1);
 
-
-  // Extração de comando e seus argumentos
-  let commandName = "";
-  let args: string[] = [];
-
-  if (isCommand) {
-    const messageWithoutPrefix = finalMessageText.slice(PREFIX.length).trim();
-    commandName = messageWithoutPrefix.split(" ")[0]?.toLowerCase() || ""; // Comando em minúsculo
-    args = messageWithoutPrefix.split(" ").slice(1);
-  }
-
-  // Extração de mídias
+  // Extração das mídias
   const imageMessage = messageDetails.message?.imageMessage || null;
   const videoMessage = messageDetails.message?.videoMessage || null;
   const audioMessage = messageDetails.message?.audioMessage || null;
 
-  // Tipo de mensagem
-  const messageType1 = Object.keys(messageDetails.message || {})[0];
-
-  // Chave da mensagem
-  const messageKey1: proto.IMessageKey = {
-    remoteJid: messageDetails.key.remoteJid || "",
-    fromMe: messageDetails.key.fromMe || false,
-    id: messageDetails.key.id || "",
+  return { 
+    mentions,
+    finalMessageText,  // Texto completo da mensagem
+    from,              // ID do remetente (pode ser do grupo)
+    fromUser,          // Número do usuário sem o sufixo
+    isCommand,         // Se é ou não um comando
+    commandName,       // Nome do comando (se aplicável)
+    args,              // Lista de argumentos do comando
+    userName,          // Nome do usuário
+    participant,       // ID do participante (se for de grupo ou privado)
+    imageMessage,      // Imagem enviada (se houver)
+    videoMessage,      // Vídeo enviado (se houver)
+    audioMessage,      // Áudio enviado (se houver)
+    
   };
   
-
-  // Retorno do objeto final
-  return { 
-    messageKey,
-    messageKey1,
-    messageType1,
-    mentions,
-    finalMessageText,
-    from,
-    fromUser,
-    isCommand,
-    commandName,
-    args,
-    userName,
-    participant,
-    imageMessage,
-    videoMessage,
-    audioMessage,
-  };
 };
 
 

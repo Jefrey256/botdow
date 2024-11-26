@@ -2,7 +2,13 @@ import makeWASocket, { useMultiFileAuthState, DisconnectReason, fetchLatestBaile
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import P from "pino";
-import { question } from "./exports/index";
+import { question } from "./exports/index"
+import { teste } from "./exports/teste";
+import {extractMessage} from "./exports/message"
+import {handleMenuCommand} from "./commands/index"
+
+
+
 
 export async function chico(): Promise<void> {
   const logger = P({ timestamp: () => `,"time":"${new Date().toJSON()}"` }, P.destination('./wa-logs.txt'));
@@ -41,66 +47,24 @@ export async function chico(): Promise<void> {
 
   pico.ev.on("creds.update", saveCreds);
 
-  // Ouvinte para mensagens recebidas
   pico.ev.on("messages.upsert", async ({ messages }) => {
-    const messageDetails = messages[0];
+  const messageDetails = messages[0];
 
-    if (!messageDetails.message) return; // Ignora mensagens vazias
+  if (!messageDetails.message) return; // Ignora mensagens vazias
 
-    const sender = messageDetails.key.remoteJid; // ID do remetente
-    const messageType = Object.keys(messageDetails.message)[0]; // Tipo de mensagem (texto, imagem, etc.)
+  // Verifica se a mensagem foi enviada pelo próprio bot
+  if (messageDetails.key.fromMe) {
+    console.log("Mensagem enviada pelo próprio bot, ignorando...");
+    return;
+  }
 
-    // Verifica se a mensagem é um comando de texto
-    if (messageType === "conversation" || messageType === "extendedTextMessage") {
-      const text = messageDetails.message.conversation || messageDetails.message.extendedTextMessage.text;
+  const { commandName } = extractMessage(messageDetails);
+  const from = messageDetails.key.remoteJid;
 
-      // Verifica se é o comando ,Dow
-      if (text === ",Dow") {
-        console.log(`Comando ",Dow" recebido de ${sender}.`);
+  // Chama o comando de menu com os dados necessários
+  await handleMenuCommand(pico, from, messageDetails);
+});
 
-        // Verifica se a mensagem citada contém uma imagem
-        const quotedMessage = messageDetails.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-        if (quotedMessage && quotedMessage.imageMessage) {
-          try {
-            // Cria o objeto IMessageKey com os dados corretos
-            const messageKey: proto.IMessageKey = {
-              remoteJid: messageDetails.key.remoteJid, // JID do remetente
-              fromMe: messageDetails.key.fromMe,       // Se a mensagem é do próprio bot
-              id: messageDetails.key.id,               // ID da mensagem
-            };
 
-            // Faz o download da mídia citada
-            const buffer = await downloadMediaMessage(
-              { 
-                key: messageKey,  // A chave da mensagem correta
-                message: quotedMessage // Mensagem que foi citada
-              },
-              "buffer",
-              {},
-              { 
-                logger,
-                reuploadRequest: pico.updateMediaMessage
-              }
-            );
 
-            // Criação de diretório para salvar o arquivo
-            const savePath = path.resolve(__dirname, "..", "downloads", `${Date.now()}`);
-            await mkdir(savePath, { recursive: true });
-
-            // Salva a imagem no diretório criado
-            const filePath = path.join(savePath, "imagem.jpeg");
-            await writeFile(filePath, buffer);
-
-            console.log(`Imagem salva com sucesso em: ${filePath}`);
-            await pico.sendMessage(sender, { text: `Imagem salva com sucesso no diretório: ${filePath}` });
-          } catch (error) {
-            console.error("Erro ao baixar imagem:", error);
-            await pico.sendMessage(sender, { text: "Erro ao baixar a imagem. Tente novamente." });
-          }
-        } else {
-          await pico.sendMessage(sender, { text: "Por favor, responda a uma mensagem com imagem para usar o comando ,Dow." });
-        }
-      }
-    }
-  });
 }

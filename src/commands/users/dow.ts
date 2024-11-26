@@ -1,69 +1,67 @@
-import { WASocket } from '@whiskeysockets/baileys';
-import { proto } from '@whiskeysockets/baileys';
-//import { Logger } from 'some-package';  // Substitua se necessário.
-/**
- * Função para baixar a mídia de uma mensagem citada.
- * @param socket - Instância do WASocket.
- * @param messageDetails - Detalhes da mensagem recebida.
- * @param logger - Logger para depuração.
- */
-import * as fs from 'fs';
-import * as path from 'path';
-import { downloadMediaMessage } from '@whiskeysockets/baileys';
-import { extractMessage } from "../../exports/message";
+import { downloadMediaMessage } from '@whiskeysockets/baileys'; // Certifique-se de importar a função correta
+import path from 'path';
+import { mkdir, writeFile } from 'fs/promises'; // Asegure-se de usar fs.promises para usar await
+import { pico } from '../../connection'; // Ajuste para o local correto do seu pico
+import { proto } from '@whiskeysockets/baileys'; // Certifique-se de ter a biblioteca importada corretamente
 
-export async function handleDowCommand(
-  socket: WASocket,
-  messageDetails: proto.IWebMessageInfo,
-  logger,
-): Promise<void> {
-  // Extraindo as informações da mensagem
-  const { from, imageMessage, commandName } = extractMessage(messageDetails);
+export const handleDowCommand = async (
+  messageDetails: proto.IWebMessageInfo, 
+  logger: P.Logger
+) => {
+  if (!messageDetails.message) return; // Ignora mensagens vazias
 
-  // Verificando o comando
-  console.log('Comando recebido:', commandName);
+  const { sender, messageType, quotedMessage } = teste(messageDetails);
 
-  // Verificando se o comando é 'dow'
-  if (commandName !== 'dow') {
-    console.log('Comando não é "dow", retornando sem ação');
-    return;
-  }
+  // Verifica se a mensagem é um comando de texto
+  if (messageType === "conversation" || messageType === "extendedTextMessage") {
+    const text = messageDetails.message.conversation || messageDetails.message.extendedTextMessage.text;
 
-  // Verificando se existe uma imagem na mensagem
-  if (imageMessage) {
-    console.log('Imagem encontrada, processando o download...');
-    try {
-      const message = { 
-        key: messageDetails.key,
-        message: { imageMessage } as proto.IMessage // Convertendo explicitamente para IMessage
-      };
+    // Verifica se é o comando ,Dow
+    if (text === ",Dow") {
+      console.log(`Comando ",Dow" recebido de ${sender}.`);
 
-      // Faz o download da imagem
-      const buffer = await downloadMediaMessage(
-        message,
-        "buffer",
-        {},
-        { logger, reuploadRequest: socket.updateMediaMessage }
-      );
+      // Verifica se a mensagem citada contém uma imagem
+      if (quotedMessage && quotedMessage.imageMessage) {
+        try {
+          // Cria o objeto IMessageKey com os dados corretos
+          const messageKey: proto.IMessageKey = {
+            remoteJid: messageDetails.key.remoteJid, // JID do remetente
+            fromMe: messageDetails.key.fromMe,       // Se a mensagem é do próprio bot
+            id: messageDetails.key.id,               // ID da mensagem
+          };
 
-      // Criação de diretório para salvar o arquivo
-      const savePath = path.resolve(__dirname, "..", "downloads", `${Date.now()}`);
-      await fs.promises.mkdir(savePath, { recursive: true });
+          // Faz o download da mídia citada
+          const buffer = await downloadMediaMessage(
+            { 
+              key: messageKey,  // A chave da mensagem correta
+              message: quotedMessage // Mensagem que foi citada
+            },
+            "buffer",
+            {},
+            { 
+              logger,
+              reuploadRequest: pico.updateMediaMessage
+            }
+          );
 
-      // Salva a imagem no diretório criado
-      const filePath = path.join(savePath, "imagem.jpeg");
-      await fs.promises.writeFile(filePath, buffer);
+          // Criação de diretório para salvar o arquivo
+          const savePath = path.resolve(__dirname, "..", "downloads", `${Date.now()}`);
+          await mkdir(savePath, { recursive: true });
 
-      console.log(`Imagem salva com sucesso em: ${filePath}`);
-      await socket.sendMessage(from, { text: `Imagem salva com sucesso no diretório: ${filePath}` });
-    } catch (error) {
-      console.error("Erro ao baixar imagem:", error);
-      await socket.sendMessage(from, { text: "Erro ao baixar a imagem. Tente novamente." });
-    }
-  } else {
-    console.log('Nenhuma imagem encontrada na resposta');
-    if (from) {
-      await socket.sendMessage(from, { text: "Por favor, responda a uma mensagem com imagem para usar o comando 'dow'." });
+          // Salva a imagem no diretório criado
+          const filePath = path.join(savePath, "imagem.jpeg");
+          await writeFile(filePath, buffer);
+
+          console.log(`Imagem salva com sucesso em: ${filePath}`);
+          await pico.sendMessage(sender, { text: `Imagem salva com sucesso no diretório: ${filePath}` });
+        } catch (error) {
+          console.error("Erro ao baixar imagem:", error);
+          await pico.sendMessage(sender, { text: "Erro ao baixar a imagem. Tente novamente." });
+        }
+      } else {
+        await pico.sendMessage(sender, { text: "Por favor, responda a uma mensagem com imagem para usar o comando ,Dow." });
+      }
     }
   }
-}
+};
+
