@@ -1,94 +1,31 @@
-import { teste } from "../../exports/teste";
-import { downloadMediaMessage } from "@whiskeysockets/baileys";
-import fs from "fs";
-import path from "path";
-import { mkdir, writeFile } from "fs/promises";
-import { pico } from "../../bot"; // Supondo que pico seja o seu bot/instância de WhatsApp
-import { exec } from "child_process"; // Para executar o ffmpeg
+import { downloadImage } from "../../exports/downloadImg";  // Importe a função de download de imagem
+import { proto } from '@whiskeysockets/baileys'; // Importando os tipos necessários
+import {extractMessage} from "../../exports/message"
 
-// Função para criar um sticker a partir de uma imagem
-export async function createSticker(messageDetails, sender) {
-  try {
-    const { messageKey, quotedMessage } = teste(messageDetails);
+/**
+ * Função que lida com a mensagem e verifica se contém mídia
+ * @param pico Instância do cliente Baileys
+ * @param from Número do remetente
+ * @param messageDetails Detalhes da mensagem recebida
+ */
+export async function handleMessage(pico: any, from: string, messageDetails: proto.IMessage) {
+  const outputFolder = './downloads';  // Caminho onde as mídias serão salvas
 
-    // Baixando a mídia da mensagem citada
-    const buffer = await downloadMediaMessage(
-      {
-        key: messageKey,  // A chave da mensagem correta
-        message: quotedMessage, // Mensagem que foi citada
-      },
-      "buffer",
-      {},
-      {
-        logger: console,  // Logando no console (você pode personalizar o logger)
-        reuploadRequest: pico.updateMediaMessage,  // Atualizar o media message
-      }
-    );
+  // Verifica se a mensagem contém mídia
+  const { media } = extractMessage(messageDetails);  // Usando a função extractMessage para verificar a mídia na mensagem
 
-    // Criar diretório para salvar o arquivo
-    const savePath = path.resolve(__dirname, "..", "downloads", `${Date.now()}`);
-    await mkdir(savePath, { recursive: true });
-
-    // Salva a imagem no diretório criado
-    const filePath = path.join(savePath, "imagem.jpeg");
-    await writeFile(filePath, buffer);
-
-    console.log(`Imagem salva com sucesso em: ${filePath}`);
-
-    // Enviar confirmação para o usuário
-    await pico.sendMessage(sender, { text: `Imagem salva com sucesso no diretório: ${filePath}` });
-
-    // Chama a função para criar o sticker
-    await createStickerFromImage(filePath, sender);
-
-  } catch (error) {
-    console.error("Erro ao baixar imagem:", error);
-    await pico.sendMessage(sender, { text: "Erro ao baixar a imagem. Tente novamente." });
+  if (media) {
+    // Se for uma imagem, chama a função para fazer o download da imagem
+    if (media instanceof proto.Message.ImageMessage) {
+      await downloadImage(pico, from, messageDetails, outputFolder);
+    }
+    // Caso contrário, trate outros tipos de mídia ou mensagens de texto
+    else {
+      console.log("Tipo de mídia não suportado ou não é uma imagem.");
+      await pico.sendMessage(from, { text: "Somente imagens podem ser baixadas." });
+    }
+  } else {
+    console.log("Nenhuma mídia encontrada na mensagem.");
+    await pico.sendMessage(from, { text: "Nenhuma mídia foi enviada." });
   }
 }
-
-// Função para criar o sticker a partir da imagem usando ffmpeg
-async function createStickerFromImage(filePath: string, sender: string) {
-  try {
-    // Caminho para o sticker em formato WebP
-    const stickerPath = path.join(path.dirname(filePath), "sticker.webp");
-
-    // Comando ffmpeg para converter a imagem para o formato WebP
-    const command = `ffmpeg -i ${filePath} -vcodec libwebp -lossless 1 -q:v 50 -preset default -an -vsync 0 -s 512x512 ${stickerPath}`;
-
-    // Executando o comando ffmpeg usando exec
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Erro ao criar o sticker: ${stderr}`);
-        pico.sendMessage(sender, { text: "Erro ao criar o sticker. Tente novamente." });
-        return;
-      }
-
-      console.log("Sticker criado com sucesso em:", stickerPath);
-
-      // Envia o sticker para o usuário
-      pico.sendMessage(sender, { sticker: fs.readFileSync(stickerPath) });
-
-      console.log("Sticker enviado com sucesso.");
-    });
-  } catch (error) {
-    console.error("Erro ao criar o sticker:", error);
-    await pico.sendMessage(sender, { text: "Erro ao criar o sticker. Tente novamente." });
-  }
-}
-
-// Função para exibir o menu de opções
-async function showMenu(sender: string) {
-  try {
-    await pico.sendMessage(sender, {
-      text: "Escolha uma opção do menu:\n1. Criar Sticker a partir de uma imagem\n2. Outro comando",
-    });
-  } catch (error) {
-    console.error("Erro ao exibir o menu:", error);
-  }
-}
-
-// Função para lidar com comandos
-
-// Exemplo de como você pode chamar as funções no seu fluxo de mensagens
-// Quando uma mensagem for recebida, o comando é identificado e a ação é realizada

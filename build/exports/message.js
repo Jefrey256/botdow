@@ -14,49 +14,56 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.extractMessage = void 0;
 exports.setupMessagingServices = setupMessagingServices;
+exports.baileysIs = baileysIs;
+exports.mediaDow = mediaDow;
+// exports/message.ts
+const config_1 = require("../config");
+const baileys_1 = require("@whiskeysockets/baileys");
 const fs_1 = __importDefault(require("fs"));
 // Função para extrair dados de uma mensagem
 const extractMessage = (messageDetails) => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13;
+    // Verificação de que messageDetails está definido e possui uma estrutura válida
+    if (!messageDetails || !messageDetails.message) {
+        console.error("Detalhes da mensagem não encontrados ou estão mal formatados");
+        return {
+            media: undefined,
+            mentions: [],
+            finalMessageText: "",
+            from: "Desconhecido",
+            fromUser: "Desconhecido",
+            isCommand: false,
+            commandName: "",
+            args: [],
+            userName: "Desconhecido",
+            participant: "Desconhecido"
+        };
+    }
     const mentions = ((_c = (_b = (_a = messageDetails.message) === null || _a === void 0 ? void 0 : _a.extendedTextMessage) === null || _b === void 0 ? void 0 : _b.contextInfo) === null || _c === void 0 ? void 0 : _c.mentionedJid) || [];
-    const finalMessageText = ((_d = messageDetails.message) === null || _d === void 0 ? void 0 : _d.conversation) || ((_f = (_e = messageDetails.message) === null || _e === void 0 ? void 0 : _e.extendedTextMessage) === null || _f === void 0 ? void 0 : _f.text) || "";
-    // Extraindo o número sem o sufixo '@s.whatsapp.net' (se for de grupo)
-    const fromUser = ((_h = (_g = messageDetails.key) === null || _g === void 0 ? void 0 : _g.participant) === null || _h === void 0 ? void 0 : _h.split('@')[0]) || ((_k = (_j = messageDetails.key) === null || _j === void 0 ? void 0 : _j.remoteJid) === null || _k === void 0 ? void 0 : _k.split('@')[0]) || "Desconhecido";
+    const finalMessageText = ((_d = messageDetails.message) === null || _d === void 0 ? void 0 : _d.conversation) ||
+        ((_f = (_e = messageDetails.message) === null || _e === void 0 ? void 0 : _e.extendedTextMessage) === null || _f === void 0 ? void 0 : _f.text) ||
+        "";
+    const fromUser = ((_h = (_g = messageDetails.key) === null || _g === void 0 ? void 0 : _g.participant) === null || _h === void 0 ? void 0 : _h.split('@')[0]) || ((_k = (_j = messageDetails.key) === null || _j === void 0 ? void 0 : _j.remoteJid) === null || _k === void 0 ? void 0 : _k.split('@')[0]);
     const from = ((_l = messageDetails.key) === null || _l === void 0 ? void 0 : _l.remoteJid) || "Remetente desconhecido";
     const userName = (messageDetails === null || messageDetails === void 0 ? void 0 : messageDetails.pushName) || "Usuário Desconhecido";
-    const PREFIX = ","; // Prefixo do comando
-    const isCommand = finalMessageText.startsWith(PREFIX); // Verifica se a mensagem começa com o prefixo
+    const isCommand = finalMessageText.startsWith(config_1.PREFIX);
     const participant = ((_m = messageDetails.key) === null || _m === void 0 ? void 0 : _m.participant) || ((_o = messageDetails.key) === null || _o === void 0 ? void 0 : _o.remoteJid);
-    const messageKey = {
-        remoteJid: messageDetails.key.remoteJid, // ID do remetente ou grupo
-        fromMe: messageDetails.key.fromMe, // Se a mensagem foi enviada pelo bot
-        id: messageDetails.key.id, // ID único da mensagem
-    };
-    // Extração de comando e seus argumentos
-    let commandName = "";
-    let args = [];
-    if (isCommand) {
-        const messageWithoutPrefix = finalMessageText.slice(PREFIX.length).trim();
-        commandName = ((_p = messageWithoutPrefix.split(" ")[0]) === null || _p === void 0 ? void 0 : _p.toLowerCase()) || ""; // Comando em minúsculo
-        args = messageWithoutPrefix.split(" ").slice(1);
-    }
-    // Extração de mídias
-    const imageMessage = ((_q = messageDetails.message) === null || _q === void 0 ? void 0 : _q.imageMessage) || null;
-    const videoMessage = ((_r = messageDetails.message) === null || _r === void 0 ? void 0 : _r.videoMessage) || null;
-    const audioMessage = ((_s = messageDetails.message) === null || _s === void 0 ? void 0 : _s.audioMessage) || null;
-    // Tipo de mensagem
-    const messageType1 = Object.keys(messageDetails.message || {})[0];
-    // Chave da mensagem
-    const messageKey1 = {
-        remoteJid: messageDetails.key.remoteJid || "",
-        fromMe: messageDetails.key.fromMe || false,
-        id: messageDetails.key.id || "",
-    };
-    // Retorno do objeto final
+    // Verificação de mídia
+    const media = ((_p = messageDetails.message) === null || _p === void 0 ? void 0 : _p.imageMessage) ||
+        ((_t = (_s = (_r = (_q = messageDetails.message) === null || _q === void 0 ? void 0 : _q.extendedTextMessage) === null || _r === void 0 ? void 0 : _r.contextInfo) === null || _s === void 0 ? void 0 : _s.quotedMessage) === null || _t === void 0 ? void 0 : _t.imageMessage) ||
+        ((_u = messageDetails.message) === null || _u === void 0 ? void 0 : _u.videoMessage) ||
+        ((_y = (_x = (_w = (_v = messageDetails.message) === null || _v === void 0 ? void 0 : _v.extendedTextMessage) === null || _w === void 0 ? void 0 : _w.contextInfo) === null || _x === void 0 ? void 0 : _x.quotedMessage) === null || _y === void 0 ? void 0 : _y.videoMessage) ||
+        ((_z = messageDetails.message) === null || _z === void 0 ? void 0 : _z.audioMessage) ||
+        ((_3 = (_2 = (_1 = (_0 = messageDetails.message) === null || _0 === void 0 ? void 0 : _0.extendedTextMessage) === null || _1 === void 0 ? void 0 : _1.contextInfo) === null || _2 === void 0 ? void 0 : _2.quotedMessage) === null || _3 === void 0 ? void 0 : _3.audioMessage) ||
+        ((_4 = messageDetails.message) === null || _4 === void 0 ? void 0 : _4.stickerMessage) ||
+        ((_8 = (_7 = (_6 = (_5 = messageDetails.message) === null || _5 === void 0 ? void 0 : _5.extendedTextMessage) === null || _6 === void 0 ? void 0 : _6.contextInfo) === null || _7 === void 0 ? void 0 : _7.quotedMessage) === null || _8 === void 0 ? void 0 : _8.stickerMessage) ||
+        ((_9 = messageDetails.message) === null || _9 === void 0 ? void 0 : _9.documentMessage) ||
+        ((_13 = (_12 = (_11 = (_10 = messageDetails.message) === null || _10 === void 0 ? void 0 : _10.extendedTextMessage) === null || _11 === void 0 ? void 0 : _11.contextInfo) === null || _12 === void 0 ? void 0 : _12.quotedMessage) === null || _13 === void 0 ? void 0 : _13.documentMessage) ||
+        undefined;
+    const commandName = isCommand ? finalMessageText.slice(config_1.PREFIX.length).split(" ")[0] : "";
+    const args = finalMessageText.split(" ").slice(1);
     return {
-        messageKey,
-        messageKey1,
-        messageType1,
+        media,
         mentions,
         finalMessageText,
         from,
@@ -66,17 +73,14 @@ const extractMessage = (messageDetails) => {
         args,
         userName,
         participant,
-        imageMessage,
-        videoMessage,
-        audioMessage,
     };
 };
 exports.extractMessage = extractMessage;
 // Função para verificar se a mensagem contém uma imagem
-function setupMessagingServices(chico, from, messageDetails) {
+function setupMessagingServices(pico, from, messageDetails) {
     const enviarTexto = (texto) => __awaiter(this, void 0, void 0, function* () {
         try {
-            yield chico.sendMessage(from, { text: texto }, { quoted: messageDetails });
+            yield pico.sendMessage(from, { text: texto }, { quoted: messageDetails });
         }
         catch (error) {
             console.error('Erro ao enviar texto:', error);
@@ -84,7 +88,7 @@ function setupMessagingServices(chico, from, messageDetails) {
     });
     const enviarAudioGravacao = (arquivo) => __awaiter(this, void 0, void 0, function* () {
         try {
-            yield chico.sendMessage(from, {
+            yield pico.sendMessage(from, {
                 audio: fs_1.default.readFileSync(arquivo),
                 mimetype: "audio/mp4",
                 ptt: true,
@@ -99,14 +103,14 @@ function setupMessagingServices(chico, from, messageDetails) {
             // Verifica se 'arquivo' é uma URL (string que começa com 'http')
             if (typeof arquivo === 'string' && arquivo.startsWith('http')) {
                 // Envia a imagem diretamente pela URL
-                yield chico.sendMessage(from, {
+                yield pico.sendMessage(from, {
                     image: { url: arquivo }, // Envia a imagem pela URL
                     caption: text
                 }, { quoted: messageDetails });
             }
             else if (Buffer.isBuffer(arquivo)) {
                 // Se 'arquivo' for um Buffer (dados binários da imagem)
-                yield chico.sendMessage(from, {
+                yield pico.sendMessage(from, {
                     image: arquivo, // Envia a imagem a partir do Buffer
                     caption: text
                 }, { quoted: messageDetails });
@@ -117,7 +121,7 @@ function setupMessagingServices(chico, from, messageDetails) {
                     // Lê o arquivo de imagem como Buffer
                     const imageBuffer = fs_1.default.readFileSync(arquivo);
                     // Envia a imagem a partir do Buffer
-                    yield chico.sendMessage(from, {
+                    yield pico.sendMessage(from, {
                         image: imageBuffer, // Envia a imagem a partir do Buffer
                         caption: text
                     }, { quoted: messageDetails });
@@ -136,7 +140,7 @@ function setupMessagingServices(chico, from, messageDetails) {
     });
     const enviarVideo = (arquivo, text) => __awaiter(this, void 0, void 0, function* () {
         try {
-            yield chico.sendMessage(from, {
+            yield pico.sendMessage(from, {
                 video: fs_1.default.readFileSync(arquivo),
                 caption: text,
                 mimetype: "video/mp4"
@@ -148,7 +152,7 @@ function setupMessagingServices(chico, from, messageDetails) {
     });
     const enviarDocumento = (arquivo, text) => __awaiter(this, void 0, void 0, function* () {
         try {
-            yield chico.sendMessage(from, {
+            yield pico.sendMessage(from, {
                 document: fs_1.default.readFileSync(arquivo),
                 caption: text
             }, { quoted: messageDetails });
@@ -159,7 +163,7 @@ function setupMessagingServices(chico, from, messageDetails) {
     });
     const enviarSticker = (arquivo) => __awaiter(this, void 0, void 0, function* () {
         try {
-            yield chico.sendMessage(from, {
+            yield pico.sendMessage(from, {
                 sticker: fs_1.default.readFileSync(arquivo)
             }, { quoted: messageDetails });
         }
@@ -169,7 +173,7 @@ function setupMessagingServices(chico, from, messageDetails) {
     });
     const enviarLocalizacao = (latitude, longitude, text) => __awaiter(this, void 0, void 0, function* () {
         try {
-            yield chico.sendMessage(from, {
+            yield pico.sendMessage(from, {
                 location: { latitude, longitude, caption: text }
             }, { quoted: messageDetails });
         }
@@ -179,7 +183,7 @@ function setupMessagingServices(chico, from, messageDetails) {
     });
     const enviarContato = (numero, nome) => __awaiter(this, void 0, void 0, function* () {
         try {
-            yield chico.sendMessage(from, {
+            yield pico.sendMessage(from, {
                 contact: {
                     phone: numero,
                     name: { formattedName: nome }
@@ -202,4 +206,48 @@ function setupMessagingServices(chico, from, messageDetails) {
         enviarLocalizacao,
         enviarContato
     };
+}
+// Import necessário
+// Função para verificar o tipo de mídia na mensagem
+function baileysIs(messageDetails, mediaType) {
+    return messageDetails.message && messageDetails.message[mediaType] !== undefined;
+}
+// Função para fazer o download da mídia
+function mediaDow(messageDetails) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const isImage = baileysIs(messageDetails, "image");
+        const isVideo = baileysIs(messageDetails, "video");
+        const isSticker = baileysIs(messageDetails, "sticker");
+        // Função de download genérica para qualquer tipo de mídia
+        const download = (webMessage, fileName, mediaType, extension) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const mediaMessage = webMessage.message[mediaType];
+                const buffer = yield (0, baileys_1.downloadMediaMessage)(webMessage, mediaMessage, mediaType); // Baileys já tem essa função
+                const fs = require('fs');
+                const path = `./${fileName}.${extension}`;
+                // Salva o arquivo
+                fs.writeFileSync(path, buffer);
+                console.log(`${mediaType} baixado com sucesso em: ${path}`);
+            }
+            catch (error) {
+                console.error(`Erro ao baixar ${mediaType}:`, error);
+            }
+        });
+        // Condições para fazer o download de cada tipo de mídia
+        if (isImage) {
+            const fileName = 'imageFile'; // Personalize o nome do arquivo
+            yield download(messageDetails, fileName, "image", "png"); // Baixar imagem
+        }
+        else if (isVideo) {
+            const fileName = 'videoFile'; // Personalize o nome do arquivo
+            yield download(messageDetails, fileName, "video", "mp4"); // Baixar vídeo
+        }
+        else if (isSticker) {
+            const fileName = 'stickerFile'; // Personalize o nome do arquivo
+            yield download(messageDetails, fileName, "sticker", "webp"); // Baixar sticker
+        }
+        else {
+            console.log("Mensagem não contém mídia suportada.");
+        }
+    });
 }

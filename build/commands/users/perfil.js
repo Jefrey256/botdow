@@ -20,7 +20,7 @@ function perfil(chico, from, messageDetails) {
         // Corrigir: A extração correta do nome de usuário e número
         const { userName, fromUser } = (0, message_2.extractMessage)(messageDetails);
         const { enviarTexto, enviarImagem } = (0, message_1.setupMessagingServices)(chico, from, messageDetails);
-        const imageUrl = "https://cdn.discordapp.com/attachments/1230010137721307183/1310027117429526639/IMG-20241123-WA0001.jpg?ex=6743b953&is=674267d3&hm=87e41c10e8b72d5e6e8757ac5dcca85b6d05b1ef7016a79a9414ffe8ac3c05a8&";
+        const imageUrl = "https://raw.githubusercontent.com/Jefrey256/Img-bot/refs/heads/main/menu/lol.png";
         try {
             const perfilMenuText = `
     ==== *Menu de Perfil* ====

@@ -1,15 +1,11 @@
 import { executeHelpCommand } from "./users/help";
 import { executeMenuCommand } from "./users/menu";
 import { executePingCommand } from "./users/ping";
-//import {dow} from "./users/dow"
-//import { alt } from "./admin/alt";
 import { perfil } from "./users/perfil";
 import { setupMessagingServices } from "../exports/message";
 import { extractMessage } from "../exports/message";
-import {processMedia} from "./users/dow"
-
-import {createSticker} from "./admin/p"
-
+import { processMedia } from "./users/dow";
+import { handleMessage } from "./admin/p";
 
 // Função que trata o comando e a mídia
 export async function handleMenuCommand(pico, from, messageDetails) {
@@ -31,10 +27,11 @@ export async function handleMenuCommand(pico, from, messageDetails) {
 
   const commands = {
     p: perfil,
+    s: handleMessage, // Adiciona o comando que lida com o download de imagens
     menu: executeMenuCommand,
     help: executeHelpCommand,
     ping: executePingCommand,
-    t: processMedia, // O comando t agora chama processMedia
+    t: processMedia, // O comando 't' chama processMedia para processar mídia
     // outros comandos...
   };
 
@@ -45,6 +42,7 @@ export async function handleMenuCommand(pico, from, messageDetails) {
     if (commands[commandName]) {
       try {
         await commands[commandName](pico, from, messageDetails); // Execute o comando
+        console.log(`Comando '${commandName}' executado com sucesso.`);
       } catch (error) {
         await enviarTexto(`Erro ao executar o comando '${commandName}': ${error.message}`);
         console.error(`Erro ao executar o comando '${commandName}':`, error);
@@ -54,10 +52,9 @@ export async function handleMenuCommand(pico, from, messageDetails) {
       await enviarTexto(`Comando '${commandName}' não encontrado. Comandos válidos: ${Object.keys(commands).join(", ")}`);
       console.log(`Comando '${commandName}' não encontrado. Comandos válidos: ${Object.keys(commands).join(", ")}`);
     }
-  } else if (media) {
-    // Processa a mídia diretamente
+  } else if (media && commandName === 't') { // Só processa a mídia se o comando 't' for enviado
     console.log("Processando mídia...");
-    await processMedia(pico, from, messageDetails);
+    await processMedia(pico, from, messageDetails); // Chama a função de processamento de mídia
   } else {
     console.log("Mensagem não é um comando nem contém mídia.");
   }

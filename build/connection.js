@@ -37,14 +37,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.chico = chico;
 const baileys_1 = __importStar(require("@whiskeysockets/baileys"));
-const promises_1 = require("fs/promises");
 const path_1 = __importDefault(require("path"));
 const pino_1 = __importDefault(require("pino"));
 const message_1 = require("./exports/message");
+const index_1 = require("./commands/index");
 function chico() {
     return __awaiter(this, void 0, void 0, function* () {
         const logger = (0, pino_1.default)({ timestamp: () => `,"time":"${new Date().toJSON()}"` }, pino_1.default.destination('./wa-logs.txt'));
-        logger.level = 'error';
+        logger.level = 'trace';
         // Configuração de autenticação
         const { state, saveCreds } = yield (0, baileys_1.useMultiFileAuthState)(path_1.default.resolve(__dirname, "..", "databass", "dr-code"));
         const { version } = yield (0, baileys_1.fetchLatestBaileysVersion)();
@@ -73,51 +73,17 @@ function chico() {
             }
         });
         pico.ev.on("creds.update", saveCreds);
-        // Ouvinte para mensagens recebidas
         pico.ev.on("messages.upsert", (_a) => __awaiter(this, [_a], void 0, function* ({ messages }) {
-            var _b, _c, _d;
             const messageDetails = messages[0];
             if (!messageDetails.message)
                 return; // Ignora mensagens vazias
-            // Chame extractMessage com o argumento correto
-            const { from, messageType1, messageKey1 } = (0, message_1.extractMessage)(messageDetails);
-            // Verifica se a mensagem é um comando de texto
-            if (messageType1 === "conversation" || messageType1 === "extendedTextMessage") {
-                const text = messageDetails.message.conversation || messageDetails.message.extendedTextMessage.text;
-                // Verifica se é o comando ,Dow
-                if (text === ",Dow") {
-                    console.log(`Comando ",Dow" recebido de ${from}.`);
-                    // Verifica se a mensagem citada contém uma imagem
-                    const quotedMessage = (_d = (_c = (_b = messageDetails.message) === null || _b === void 0 ? void 0 : _b.extendedTextMessage) === null || _c === void 0 ? void 0 : _c.contextInfo) === null || _d === void 0 ? void 0 : _d.quotedMessage;
-                    if (quotedMessage && quotedMessage.imageMessage) {
-                        try {
-                            const messageKey = {
-                                remoteJid: messageDetails.key.remoteJid,
-                                fromMe: messageDetails.key.fromMe,
-                                id: messageDetails.key.id,
-                            };
-                            // Faz o download da mídia citada
-                            const buffer = yield (0, baileys_1.downloadMediaMessage)({
-                                key: messageKey,
-                                message: { imageMessage: quotedMessage.imageMessage } // Mensagem correta
-                            }, "buffer", {}, { logger, reuploadRequest: pico.updateMediaMessage });
-                            const savePath = path_1.default.resolve(__dirname, "..", "downloads", `${Date.now()}`);
-                            yield (0, promises_1.mkdir)(savePath, { recursive: true });
-                            const filePath = path_1.default.join(savePath, "imagem.jpeg");
-                            yield (0, promises_1.writeFile)(filePath, buffer);
-                            console.log(`Imagem salva com sucesso em: ${filePath}`);
-                            yield pico.sendMessage(from, { text: `Imagem salva com sucesso no diretório: ${filePath}` });
-                        }
-                        catch (error) {
-                            console.error("Erro ao baixar imagem:", error);
-                            yield pico.sendMessage(from, { text: "Erro ao baixar a imagem. Tente novamente." });
-                        }
-                    }
-                    else {
-                        yield pico.sendMessage(from, { text: "Por favor, responda a uma mensagem com imagem para usar o comando ,Dow." });
-                    }
-                }
-            }
+            // Verifica se a mensagem foi enviada pelo próprio bot
+            //
+            //
+            const { commandName } = (0, message_1.extractMessage)(messageDetails);
+            const from = messageDetails.key.remoteJid;
+            // Chama o comando de menu com os dados necessários
+            yield (0, index_1.handleMenuCommand)(pico, from, messageDetails);
         }));
     });
 }
