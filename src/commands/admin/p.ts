@@ -22,7 +22,7 @@ export async function handleMessage(pico: any, from: string, messageDetails: pro
     // Caso contrário, trate outros tipos de mídia ou mensagens de texto
     else {
       console.log("Tipo de mídia não suportado ou não é uma imagem.");
-      await pico.sendMessage(from, { text: "Somente imagens podem ser baixadas." });
+      await pico.sendMessage(from, { text: "Somente videos podem ser baixadas." });
     }
   } else {
     console.log("Nenhuma mídia encontrada na mensagem.");

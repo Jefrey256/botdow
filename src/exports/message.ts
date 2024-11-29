@@ -23,32 +23,40 @@ export const extractMessage = (messageDetails: any) => {
     };
   }
 
+  // Extrai as menções de pessoas mencionadas na mensagem
   const mentions = messageDetails.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+  // Extrai o texto da mensagem, seja de texto simples ou texto estendido
   const finalMessageText = messageDetails.message?.conversation ||
                          messageDetails.message?.extendedTextMessage?.text ||
                          "";
+  // Extrai o nome do usuário ou identificador
   const fromUser = messageDetails.key?.participant?.split('@')[0] || messageDetails.key?.remoteJid?.split('@')[0];
+  // Extrai o identificador do remetente
   const from = messageDetails.key?.remoteJid || "Remetente desconhecido";
+  // Extrai o nome de exibição do usuário
   const userName = messageDetails?.pushName || "Usuário Desconhecido";
+  // Verifica se a mensagem é um comando (com base no prefixo)
   const isCommand = finalMessageText.startsWith(PREFIX);
+  // Extrai o participante ou remetente
   const participant = messageDetails.key?.participant || messageDetails.key?.remoteJid;
 
-  // Verificação de mídia
+  // Verificação de mídia (direta ou marcada)
   const media = messageDetails.message?.imageMessage ||
-                messageDetails.message?.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage ||
                 messageDetails.message?.videoMessage ||
-                messageDetails.message?.extendedTextMessage?.contextInfo?.quotedMessage?.videoMessage ||
                 messageDetails.message?.audioMessage ||
-                messageDetails.message?.extendedTextMessage?.contextInfo?.quotedMessage?.audioMessage ||
                 messageDetails.message?.stickerMessage ||
-                messageDetails.message?.extendedTextMessage?.contextInfo?.quotedMessage?.stickerMessage ||
                 messageDetails.message?.documentMessage ||
+                // Verificando se a mídia é citada ou marcada em mensagens de texto estendidas
+                messageDetails.message?.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage ||
+                messageDetails.message?.extendedTextMessage?.contextInfo?.quotedMessage?.videoMessage ||
+                messageDetails.message?.extendedTextMessage?.contextInfo?.quotedMessage?.audioMessage ||
+                messageDetails.message?.extendedTextMessage?.contextInfo?.quotedMessage?.stickerMessage ||
                 messageDetails.message?.extendedTextMessage?.contextInfo?.quotedMessage?.documentMessage ||
                 undefined;
 
-  
-
+  // Identificando o nome do comando, caso a mensagem seja um comando
   const commandName = isCommand ? finalMessageText.slice(PREFIX.length).split(" ")[0] : "";
+  // Extração de argumentos do comando
   const args = finalMessageText.split(" ").slice(1);
 
   return {
@@ -64,6 +72,10 @@ export const extractMessage = (messageDetails: any) => {
     participant,
   };
 };
+
+
+
+
 
 
 

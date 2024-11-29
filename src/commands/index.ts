@@ -1,3 +1,4 @@
+
 import { executeHelpCommand } from "./users/help";
 import { executeMenuCommand } from "./users/menu";
 import { executePingCommand } from "./users/ping";
@@ -6,6 +7,7 @@ import { setupMessagingServices } from "../exports/message";
 import { extractMessage } from "../exports/message";
 import { processMedia } from "./users/dow";
 import { handleMessage } from "./admin/p";
+import {videoDow} from "./admin/alt"
 
 // Função que trata o comando e a mídia
 export async function handleMenuCommand(pico, from, messageDetails) {
@@ -27,6 +29,7 @@ export async function handleMenuCommand(pico, from, messageDetails) {
 
   const commands = {
     p: perfil,
+    a: videoDow,
     s: handleMessage, // Adiciona o comando que lida com o download de imagens
     menu: executeMenuCommand,
     help: executeHelpCommand,
@@ -58,4 +61,5 @@ export async function handleMenuCommand(pico, from, messageDetails) {
   } else {
     console.log("Mensagem não é um comando nem contém mídia.");
   }
+
 }
