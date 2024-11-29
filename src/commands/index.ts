@@ -1,40 +1,64 @@
 import { executeHelpCommand } from "./users/help";
 import { executeMenuCommand } from "./users/menu";
 import { executePingCommand } from "./users/ping";
-//mport {handleDowCommand} from "./users/dow"
+//import {dow} from "./users/dow"
 //import { alt } from "./admin/alt";
 import { perfil } from "./users/perfil";
 import { setupMessagingServices } from "../exports/message";
 import { extractMessage } from "../exports/message";
+import {processMedia} from "./users/dow"
 
-// Função para tratar os comandos
+import {createSticker} from "./admin/p"
+
+
+// Função que trata o comando e a mídia
 export async function handleMenuCommand(pico, from, messageDetails) {
   const { enviarTexto } = setupMessagingServices(pico, from, messageDetails);
-  const { finalMessageText, commandName } = extractMessage(messageDetails);
+  const {
+    finalMessageText,
+    commandName,
+    fromUser,
+    media,
+    isCommand,
+    from: messageFrom,
+  } = extractMessage(messageDetails);
 
-  // Mapeamento de comandos
+  // Se a mensagem for do próprio bot, não responde
+  if (messageFrom === pico) {
+    console.log("Mensagem do próprio bot, ignorando...");
+    return;
+  }
+
   const commands = {
     p: perfil,
     menu: executeMenuCommand,
     help: executeHelpCommand,
     ping: executePingCommand,
-    //dow: handleDowCommand,
+    t: processMedia, // O comando t agora chama processMedia
+    // outros comandos...
   };
 
-  // Verifica se o comando existe
-  console.log(`Comando recebido: '${commandName}' de '${from}'`);
+  console.log(`Comando recebido: '${commandName}' de '${fromUser}'`);
 
-if (commands[commandName]) {
-  try {
-    await commands[commandName](pico, from, messageDetails);
-  } catch (error) {
-    await enviarTexto(`Erro ao executar o comando '${commandName}': ${error.message}`);
-    console.error(`Erro ao executar o comando '${commandName}':`, error);
+  // Se for um comando e existir no mapeamento, execute
+  if (isCommand) {
+    if (commands[commandName]) {
+      try {
+        await commands[commandName](pico, from, messageDetails); // Execute o comando
+      } catch (error) {
+        await enviarTexto(`Erro ao executar o comando '${commandName}': ${error.message}`);
+        console.error(`Erro ao executar o comando '${commandName}':`, error);
+      }
+    } else {
+      // Comando não encontrado
+      await enviarTexto(`Comando '${commandName}' não encontrado. Comandos válidos: ${Object.keys(commands).join(", ")}`);
+      console.log(`Comando '${commandName}' não encontrado. Comandos válidos: ${Object.keys(commands).join(", ")}`);
+    }
+  } else if (media) {
+    // Processa a mídia diretamente
+    console.log("Processando mídia...");
+    await processMedia(pico, from, messageDetails);
+  } else {
+    console.log("Mensagem não é um comando nem contém mídia.");
   }
-} else {
-  await enviarTexto(`Comando '${commandName}' não encontrado. Comandos válidos: ${Object.keys(commands).join(", ")}`);
-  
-  console.log(`Comando '${commandName}' não encontrado. Comandos válidos: ${Object.keys(commands).join(", ")}`);
-}
-
 }

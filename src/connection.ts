@@ -6,6 +6,7 @@ import { question } from "./exports/index"
 import { teste } from "./exports/teste";
 import {extractMessage} from "./exports/message"
 import {handleMenuCommand} from "./commands/index"
+import {mediaDow} from "./exports/message"
 
 
 
@@ -53,17 +54,18 @@ export async function chico(): Promise<void> {
   if (!messageDetails.message) return; // Ignora mensagens vazias
 
   // Verifica se a mensagem foi enviada pelo próprio bot
-  if (messageDetails.key.fromMe) {
-    console.log("Mensagem enviada pelo próprio bot, ignorando...");
-    return;
-  }
+  
+  //
+  //
 
   const { commandName } = extractMessage(messageDetails);
   const from = messageDetails.key.remoteJid;
 
   // Chama o comando de menu com os dados necessários
+  
   await handleMenuCommand(pico, from, messageDetails);
 });
+
 
 
 

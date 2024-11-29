@@ -1,7 +1,19 @@
-export async function processMedia (pico, from, messageDetails) {
+import { proto, downloadContentFromMessage } from '@whiskeysockets/baileys';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
+
+/**
+ * Função para processar e baixar a mídia, criando um diretório para armazená-la.
+ * @param pico A instância do bot (para envio de mensagens).
+ * @param from Número do remetente.
+ * @param messageDetails Detalhes da mensagem que contém a mídia.
+ */
+export async function processMedia(pico, from, messageDetails) {
   // Extrai a mídia
-  const media = messageDetails.message?.imageMessage || messageDetails.message?.videoMessage || messageDetails.message?.audioMessage;
-  
+  const media = messageDetails.message?.imageMessage || 
+               messageDetails.message?.videoMessage || 
+               messageDetails.message?.audioMessage;
+
   if (!media) {
     console.error("Mídia não fornecida.");
     await pico.sendMessage(from, "Nenhuma mídia foi enviada.");
@@ -10,22 +22,39 @@ export async function processMedia (pico, from, messageDetails) {
 
   console.log("Mídia encontrada:", media);
 
-  // Aqui, você pode processar a mídia conforme necessário.
-  // No caso de imagem, por exemplo, você pode enviar um link para o arquivo
+  // Faz o download da mídia
   try {
-    const mediaUrl = media.url; // Obtendo URL da mídia
-    if (mediaUrl) {
-      await pico.sendMessage(from, { 
-        text: "Aqui está sua imagem:", 
-        mediaUrl: mediaUrl, // Envia o link da mídia
-        caption: media.caption || "Mídia recebida!" // Se houver uma legenda, envie-a
-      });
-    } else {
-      // Se a mídia não tiver URL, você pode responder com uma mensagem de erro
-      await pico.sendMessage(from, "Erro ao acessar a mídia.");
+    const mediaType = media.mimetype; // Tipo completo da mídia, como image/png, video/mp4
+    const transform = await downloadContentFromMessage(media, mediaType.split("/")[0]);
+
+    // Caminho para o diretório pathdow
+    const path = join(__dirname, 'pathdow');
+    
+    // Verifica se o diretório existe, caso contrário, cria
+    await mkdir(path, { recursive: true });
+
+    // Obtém a extensão do arquivo (ex: .png, .mp4, etc.)
+    const ext = mediaType.split("/")[1];
+
+    // Define o caminho do arquivo, usando a extensão do tipo MIME
+    const filePath = join(path, `media.${ext}`);
+
+    // Baixa e salva o conteúdo da mídia
+    const fileStream = writeFile(filePath, '');
+
+    for await (const chunk of transform) {
+      await writeFile(filePath, chunk, { flag: 'a' }); // Escreve o conteúdo no arquivo
     }
+
+    // Envia mensagem com o arquivo salvo
+    await pico.sendMessage(from, {
+      text: `Mídia salva com sucesso em ${filePath}`,
+    });
+
+    console.log(`Mídia salva em: ${filePath}`);
+    
   } catch (error) {
     console.error("Erro ao processar a mídia:", error);
     await pico.sendMessage(from, "Erro ao processar a mídia.");
   }
-};
+}

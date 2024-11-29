@@ -1,19 +1,55 @@
-import { isAudio, isImage, isVideo,isDocument, isSticker } from '../../exports/is';
-import { proto } from '@whiskeysockets/baileys';
+const media =
+    messageDetails.message?.imageMessage ??
+    messageDetails.message?.extendedTextMessage?.contextmessageDetails?.quotedMessage
+      ?.imageMessage ??
+    messageDetails.message?.videoMessage ??
+    messageDetails.message?.extendedTextMessage?.contextmessageDetails?.quotedMessage
+      ?.videoMessage ??
+    messageDetails.message?.audioMessage ??
+    messageDetails.message?.extendedTextMessage?.contextmessageDetails?.quotedMessage
+      ?.audioMessage ??
+    messageDetails.message?.stickerMessage ??
+    messageDetails.message?.extendedTextMessage?.contextmessageDetails?.quotedMessage
+      ?.stickerMessage ??
+    messageDetails.message?.documentMessage ??
+    messageDetails.message?.extendedTextMessage?.contextmessageDetails?.quotedMessage
+      ?.documentMessage ??
+    undefined;
 
-export async function handleIncomingMessage(messageDetails: proto.IWebMessageInfo) {
-    if (isImage(messageDetails)) {
-        console.log('A mensagem  contém uma imagem.');
-    } else if (isVideo(messageDetails)) {
-        console.log('A mensagem contém um vídeo.');
-    } else if (isAudio(messageDetails)) {
-        console.log('A mensagem contém um áudio.');
-    } else if (isDocument(messageDetails)) {
-        console.log('A mensagem contém um documento.');
-    } else if (isSticker(messageDetails)) {
-        console.log('A mensagem contém um sticker.');
-    }else {
-        console.log('Nenhuma mídia detectada.');
-    }
-  
-}
+
+/**
+     * downloadContentFromMessage based in interaction.media
+     * Use getMediaContent(true) for return buffer of action
+     * alternative getMediaContent(buffer,media)
+     */
+    getMediaContent: async <AllowBuffer extends boolean = false>(
+      buffer: AllowBuffer = false as AllowBuffer,
+      media?: typeof message.media
+    ): Promise<AllowBuffer extends true ? Buffer : internal.Transform> => {
+      let transform: internal.Transform;
+      if (!media) media = message.media;
+      if (media instanceof proto.Message.ImageMessage) {
+        transform = await downloadContentFromMessage(media, "image");
+      } else if (media instanceof proto.Message.VideoMessage) {
+        transform = await downloadContentFromMessage(media, "video");
+      } else if (media instanceof proto.Message.AudioMessage) {
+        transform = await downloadContentFromMessage(media, "audio");
+      } else if (media instanceof proto.Message.StickerMessage) {
+        transform = await downloadContentFromMessage(media, "sticker");
+      } else if (media instanceof proto.Message.DocumentMessage) {
+        transform = await downloadContentFromMessage(media, "document");
+      }
+      //@ts-ignore unnecessary types declares
+      if (!buffer) return transform;
+      else {
+        let content = Buffer.from([]);
+        for await (const chunk of transform) {
+          content = Buffer.concat([content, chunk]);
+        }
+        //@ts-ignore unnecessary types declares
+        return content;
+      }
+    },
+    
+    
+    
