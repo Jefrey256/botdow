@@ -11,11 +11,12 @@ import {videoDow} from "./admin/alt"
 import {createSticker} from "./admin/sticker"
 import {alterarP} from "./users/ftperfil"
 
-// Função que trata o comando e a mídia
+
+
 export async function handleMenuCommand(pico, from, messageDetails) {
   const { enviarTexto } = setupMessagingServices(pico, from, messageDetails);
   const {
-    finalMessageText,
+    fullMessage, // Usamos o fullMessage em vez de finalMessageText
     commandName,
     fromUser,
     media,
@@ -30,7 +31,7 @@ export async function handleMenuCommand(pico, from, messageDetails) {
   }
 
   const commands = {
-    alt : alterarP,
+    alt: alterarP,
     p: perfil,
     a: videoDow,
     s: handleMessage, // Adiciona o comando que lida com o download de imagens
@@ -44,11 +45,11 @@ export async function handleMenuCommand(pico, from, messageDetails) {
 
   console.log(`Comando recebido: '${commandName}' de '${fromUser}'`);
 
-  // Se for um comando e existir no mapeamento, execute
+  // Verificação se é comando válido
   if (isCommand) {
     if (commands[commandName]) {
       try {
-        await commands[commandName](pico, from, messageDetails); // Execute o comando
+        await commands[commandName](pico, from, messageDetails); // Executa o comando
         console.log(`Comando '${commandName}' executado com sucesso.`);
       } catch (error) {
         await enviarTexto(`Erro ao executar o comando '${commandName}': ${error.message}`);
@@ -59,11 +60,11 @@ export async function handleMenuCommand(pico, from, messageDetails) {
       await enviarTexto(`Comando '${commandName}' não encontrado. Comandos válidos: ${Object.keys(commands).join(", ")}`);
       console.log(`Comando '${commandName}' não encontrado. Comandos válidos: ${Object.keys(commands).join(", ")}`);
     }
-  } else if (media && commandName === 't') { // Só processa a mídia se o comando 't' for enviado
+  } else if (media && commandName === "t") { 
+    // Só processa a mídia se o comando 't' for enviado
     console.log("Processando mídia...");
     await processMedia(pico, from, messageDetails); // Chama a função de processamento de mídia
   } else {
     console.log("Mensagem não é um comando nem contém mídia.");
   }
-
 }

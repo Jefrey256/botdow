@@ -41,7 +41,7 @@ function createSticker(pico, from, messageDetails) {
         }
         try {
             // Diretório de saída
-            const outputFolder = "./stickers";
+            const outputFolder = "./assets/stickers";
             yield (0, promises_1.mkdir)(outputFolder, { recursive: true });
             const isVideo = !!((_p = messageDetails.message) === null || _p === void 0 ? void 0 : _p.videoMessage) || !!((_t = (_s = (_r = (_q = messageDetails.message) === null || _q === void 0 ? void 0 : _q.extendedTextMessage) === null || _r === void 0 ? void 0 : _r.contextInfo) === null || _s === void 0 ? void 0 : _s.quotedMessage) === null || _t === void 0 ? void 0 : _t.videoMessage);
             const fileExtension = isVideo ? "mp4" : "jpeg";
@@ -87,6 +87,13 @@ function createSticker(pico, from, messageDetails) {
             // Enviar figurinha
             yield pico.sendMessage(from, { sticker: { url: stickerPath } });
             console.log("Figurinha enviada com sucesso!");
+            // Remover os arquivos temporários
+            yield (0, promises_1.rm)(inputPath);
+            yield (0, promises_1.rm)(stickerPath);
+            console.log("Arquivos temporários removidos.");
+            // Remover a pasta, se estiver vazia
+            yield (0, promises_1.rm)(outputFolder, { recursive: true, force: true });
+            console.log("Pasta temporária removida.");
         }
         catch (error) {
             console.error("Erro ao criar figurinha:", error);

@@ -48,22 +48,53 @@ export async function chico(): Promise<void> {
 
   pico.ev.on("creds.update", saveCreds);
 
-  pico.ev.on("messages.upsert", async ({ messages }) => {
-  const messageDetails = messages[0];
-
+  
+pico.ev.on("messages.upsert", async ({ messages }) => {
+  const messageDetails = messages[0]; // Obtém a primeira mensagem do array
+  
   if (!messageDetails.message) return; // Ignora mensagens vazias
 
-  // Verifica se a mensagem foi enviada pelo próprio bot
-  
-  //
-  //
+  const from = messageDetails.key.remoteJid; // Obtém o número de telefone do remetente
 
+  // Verificar se a mensagem é uma resposta (citação)
+  let originalMessage = null;
+  if (messageDetails.message?.extendedTextMessage?.contextInfo?.quotedMessage) {
+    originalMessage = messageDetails.message.extendedTextMessage.contextInfo.quotedMessage;
+    console.log("Mensagem citada: ", originalMessage);
+  }
+
+  // Verifica se a mensagem contém uma mídia (imagem ou vídeo) e lê a legenda (se houver)
+  const mediaMessage =
+    messageDetails.message?.imageMessage ||
+    messageDetails.message?.videoMessage ||
+    messageDetails.message?.documentMessage;
+
+  let caption = "";
+  if (mediaMessage && messageDetails.message?.extendedTextMessage?.text) {
+    caption = messageDetails.message.extendedTextMessage.text; // A legenda da mídia
+    console.log("Legenda da mídia:", caption);
+  }
+
+  // Verifica se o comando está presente na mensagem
   const { commandName } = extractMessage(messageDetails);
-  const from = messageDetails.key.remoteJid;
 
-  // Chama o comando de menu com os dados necessários
-  
-  await handleMenuCommand(pico, from, messageDetails);
+  // Se a mensagem contiver um comando, chama o handler para o menu
+  if (commandName) {
+    await handleMenuCommand(pico, from, messageDetails);
+  } else {
+    // Caso não haja comando, pode tratar a mensagem normalmente
+    console.log("Mensagem recebida:", messageDetails);
+    // Aqui você pode adicionar lógica adicional para interagir com o usuário
+  }
+
+  // Se houver um conteúdo marcado ou legenda, você pode processá-lo de acordo
+  if (originalMessage) {
+    console.log("Conteúdo da mensagem original (citado):", originalMessage);
+  }
+
+  if (caption) {
+    console.log("Legendas ou texto associado à mídia:", caption);
+  }
 });
 
 

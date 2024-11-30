@@ -19,7 +19,7 @@ function executeHelpCommand(chico, from, userName) {
             // Envia áudio utilizando o método correto
             yield enviarAudioGravacao("assets/music/iphone.ogg");
             // Envia a imagem com o texto da legenda
-            yield enviarImagem("assets/img/lol.png", (0, caption_1.menuCaption)(userName));
+            yield enviarImagem("assets/img/banner.png", (0, caption_1.menuCaption)(userName));
         }
         catch (error) {
             console.log("Erro ao executar o comando 'help':", error);

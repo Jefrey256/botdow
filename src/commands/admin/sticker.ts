@@ -1,5 +1,5 @@
 import { join } from "path";
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir, rm } from "fs/promises";
 import { downloadContentFromMessage } from "@whiskeysockets/baileys";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -24,7 +24,7 @@ export async function createSticker(pico: any, from: string, messageDetails: any
 
   try {
     // Diretório de saída
-    const outputFolder = "./stickers";
+    const outputFolder = "./assets/stickers";
     await mkdir(outputFolder, { recursive: true });
 
     const isVideo = !!messageDetails.message?.videoMessage || !!messageDetails.message?.extendedTextMessage?.contextInfo?.quotedMessage?.videoMessage;
@@ -64,6 +64,15 @@ export async function createSticker(pico: any, from: string, messageDetails: any
     // Enviar figurinha
     await pico.sendMessage(from, { sticker: { url: stickerPath } });
     console.log("Figurinha enviada com sucesso!");
+
+    // Remover os arquivos temporários
+    await rm(inputPath);
+    await rm(stickerPath);
+    console.log("Arquivos temporários removidos.");
+
+    // Remover a pasta, se estiver vazia
+    await rm(outputFolder, { recursive: true, force: true });
+    console.log("Pasta temporária removida.");
 
   } catch (error) {
     console.error("Erro ao criar figurinha:", error);

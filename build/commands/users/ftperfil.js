@@ -36,7 +36,7 @@ function alterarP(pico, from, messageDetails) {
         }
         try {
             // Diretório de saída
-            const outputFolder = (0, path_1.join)(__dirname, "../../assets/img");
+            const outputFolder = (0, path_1.join)(__dirname, "../../../assets/img");
             yield (0, promises_1.mkdir)(outputFolder, { recursive: true });
             const filePath = (0, path_1.join)(outputFolder, "banner.png"); // Definindo o nome fixo da imagem como "banner.png"
             // Baixar imagem
