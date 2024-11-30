@@ -8,7 +8,7 @@ export async function executeHelpCommand(chico, from, userName) {
     await enviarAudioGravacao("assets/music/iphone.ogg");
 
     // Envia a imagem com o texto da legenda
-    await enviarImagem("assets/img/lol.png", menuCaption(userName));
+    await enviarImagem("assets/img/banner.png", menuCaption(userName));
   } catch (error) {
     console.log("Erro ao executar o comando 'help':", error);
   }

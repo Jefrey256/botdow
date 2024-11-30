@@ -50,8 +50,9 @@ function processMedia(pico, from, messageDetails) {
             yield (0, promises_1.mkdir)(path, { recursive: true });
             // Obtém a extensão do arquivo (ex: .png, .mp4, etc.)
             const ext = mediaType.split("/")[1];
-            // Define o caminho do arquivo, usando a extensão do tipo MIME
-            const filePath = (0, path_1.join)(path, `media.${ext}`);
+            // Gera um nome único para o arquivo usando timestamp
+            const timestamp = Date.now(); // Usa o timestamp atual como identificador único
+            const filePath = (0, path_1.join)(path, `media_${timestamp}.${ext}`); // Renomeia o arquivo com o timestamp
             // Baixa e salva o conteúdo da mídia
             const fileStream = (0, promises_1.writeFile)(filePath, '');
             try {

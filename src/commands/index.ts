@@ -8,6 +8,8 @@ import { extractMessage } from "../exports/message";
 import { processMedia } from "./users/dow";
 import { handleMessage } from "./admin/p";
 import {videoDow} from "./admin/alt"
+import {createSticker} from "./admin/sticker"
+import {alterarP} from "./users/ftperfil"
 
 // Função que trata o comando e a mídia
 export async function handleMenuCommand(pico, from, messageDetails) {
@@ -28,12 +30,14 @@ export async function handleMenuCommand(pico, from, messageDetails) {
   }
 
   const commands = {
+    alt : alterarP,
     p: perfil,
     a: videoDow,
     s: handleMessage, // Adiciona o comando que lida com o download de imagens
     menu: executeMenuCommand,
     help: executeHelpCommand,
     ping: executePingCommand,
+    k: createSticker,
     t: processMedia, // O comando 't' chama processMedia para processar mídia
     // outros comandos...
   };

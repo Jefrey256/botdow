@@ -13,14 +13,14 @@ exports.handleMenuCommand = handleMenuCommand;
 const help_1 = require("./users/help");
 const menu_1 = require("./users/menu");
 const ping_1 = require("./users/ping");
-//mport { createSticker } from "./admin/p";
-//import {dow} from "./users/dow"
-//import { alt } from "./admin/alt";
 const perfil_1 = require("./users/perfil");
 const message_1 = require("../exports/message");
 const message_2 = require("../exports/message");
 const dow_1 = require("./users/dow");
-const stk_1 = require("./users/stk");
+const p_1 = require("./admin/p");
+const alt_1 = require("./admin/alt");
+const sticker_1 = require("./admin/sticker");
+const ftperfil_1 = require("./users/ftperfil");
 // Função que trata o comando e a mídia
 function handleMenuCommand(pico, from, messageDetails) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -32,13 +32,15 @@ function handleMenuCommand(pico, from, messageDetails) {
             return;
         }
         const commands = {
+            alt: ftperfil_1.alterarP,
             p: perfil_1.perfil,
+            a: alt_1.videoDow,
+            s: p_1.handleMessage, // Adiciona o comando que lida com o download de imagens
             menu: menu_1.executeMenuCommand,
-            d: stk_1.dimg,
             help: help_1.executeHelpCommand,
             ping: ping_1.executePingCommand,
-            //s: createSticker,
-            t: dow_1.processMedia, // O comando t agora chama processMedia
+            k: sticker_1.createSticker,
+            t: dow_1.processMedia, // O comando 't' chama processMedia para processar mídia
             // outros comandos...
         };
         console.log(`Comando recebido: '${commandName}' de '${fromUser}'`);
@@ -47,6 +49,7 @@ function handleMenuCommand(pico, from, messageDetails) {
             if (commands[commandName]) {
                 try {
                     yield commands[commandName](pico, from, messageDetails); // Execute o comando
+                    console.log(`Comando '${commandName}' executado com sucesso.`);
                 }
                 catch (error) {
                     yield enviarTexto(`Erro ao executar o comando '${commandName}': ${error.message}`);
@@ -58,6 +61,10 @@ function handleMenuCommand(pico, from, messageDetails) {
                 yield enviarTexto(`Comando '${commandName}' não encontrado. Comandos válidos: ${Object.keys(commands).join(", ")}`);
                 console.log(`Comando '${commandName}' não encontrado. Comandos válidos: ${Object.keys(commands).join(", ")}`);
             }
+        }
+        else if (media && commandName === 't') { // Só processa a mídia se o comando 't' for enviado
+            console.log("Processando mídia...");
+            yield (0, dow_1.processMedia)(pico, from, messageDetails); // Chama a função de processamento de mídia
         }
         else {
             console.log("Mensagem não é um comando nem contém mídia.");
